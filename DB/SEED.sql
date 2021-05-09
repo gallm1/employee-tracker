@@ -17,7 +17,7 @@ VALUES ("Wells");
 INSERT INTO role (title, salary, department_id)
 VALUES ("Inventory Lead", 175000, 1);
 INSERT INTO role (title, salary, department_id)
-VALUES ("Inventory Analyst", 10000, 1);
+VALUES ("Inventory Analyst", 100000, 1);
 INSERT INTO role (title, salary, department_id)
 VALUES ("MC Lead", 185000, 2);
 INSERT INTO role (title, salary, department_id)
@@ -63,4 +63,4 @@ VALUES ("RJ", "Terranova", 10, 9);
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES ("Lisa", "DeViney", 11, NULL);
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Tom", "Letchford", 12, 12);
+VALUES ("Tom", "Letchford", 12, 11);

@@ -21,36 +21,44 @@ function beginPrompt() {
         .prompt({
             type: "list",
             name: "actions",
-            message: "Choose an action in the below choices:",
+            message: "Choose an action from the below choices:",
             choices: [
                 "List Employee(s)",
-                "List Employee(s) by Department",   
+                "List Employee(s) by Department",
+                "List Roles",
+                "List Departments",   
                 "Add Employee(s)",
-                "Remove Employee(s)",
-                "Update Employee Role",
-                "Add Role",
+                // "Remove Employee(s)",
+                // "Update Employee Role",
+                // "Add Role",
                 "Exit"]
         })
         .then(function ({ actions }) {
             switch (actions) {
                 case "List Employee(s)":
-                    listEmployee();
+                    listEmployees();
                     break;
                 case "List Employee(s) by Department":
-                    listEmployeeByDept();
+                    listEmployeesByDept();
+                    break;
+                case "List Roles":
+                    listRoles();
+                    break;
+                case "List Departments":
+                    listDept();
                     break;
                 case "Add Employee":
                     addEmployee();
                     break;
-                case "Remove Employee":
-                    removeEmployee();
-                    break;
-                case "Update Employee Role":
-                    updateEmployeeRole();
-                    break;
-                case "Add Role":
-                    addRole();
-                    break;
+                // case "Remove Employee":
+                //     removeEmployee();
+                //     break;
+                // case "Update Employee Role":
+                //     updateEmployeeRole();
+                //     break;
+                // case "Add Role":
+                //     addRole();
+                //     break;
                 case "Exit":
                     connection.end();
                     break;
@@ -59,12 +67,12 @@ function beginPrompt() {
 }
 
 // List employees --- All
-function listEmployee() {
+function listEmployees() {
     console.log("Listing employees\n");
 
     var query = 
     `SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department, r.salary, CONCAT(m.first_name, " ", m.last_name) AS manager
-    FROM employy e
+    FROM employee e
     LEFT JOIN role r
     ON e.role_id = r.id
     LEFT JOIN department d
@@ -83,79 +91,81 @@ function listEmployee() {
 
 }
 
-function listEmployeeByDept() {
+function listEmployeesByDept() {
     console.log("Listing employees by department\n");
 
-    var query = 
-    `SELECT d.id, d.name, r.salary AS budget
-    FROM employee e
-    LEFT JOIN role r
-    ON e.role_id = r.id
-    LEFT JOIN department d
-    ON d.id = r.department_id
-    GROUP BY d.id, d.name`
+    connection.query("SELECT * FROM department", (error, result) => {
+        if (error) throw error;
 
-    connection.query(query, function (err, res) {
-        if (err) throw err;
-
-        const deptOptions = res.map(data => ({
-            value: data.id, name: data.name
-        }));
-
-        console.table(res);
-        console.log("Select Department\n");
-
-        promptDepartment(deptOptions);
-
-    });
-
-}
-
-function promptDepartment(deptOptions) {
-    inquirer
-        .prompt([
+        inquirer.prompt([
             {
                 type: "list",
-                name: "departmentId",
-                message: "Select the department to view",
-                choices: deptOptions
+                name: "departmentOptions",
+                message: "Select department to list employees by department: ",
+                choices: result.map((dept) => {
+                    return {
+                        name: `${dept.id}: ${dept.name}`,
+                        value: dept
+                    }
+                })
             }
-        ])
-        .then(function (answer) {
-            console.log("answer ", answer.departmentId);
+        ]).then(({ departmentOptions }) => {
+            console.log(departmentOptions);
 
-            var query = 
-            `SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department
+            connection.query(`SELECT
+            e.id,
+            CONCAT(e.first_name, ' ' ,e.last_name) AS Employee,
+            role.title AS Title,
+            department.name AS Department,
+            CONCAT("$",role.salary) AS Salary,
+            IFNULL(CONCAT(m.first_name, ' ' ,m.last_name), 'NO MANAGER') AS Manager
             FROM employee e
-            JOIN role r
-            ON e.role id = r.id
-            JOIN department d
-            ON d.id = r.department_id
-            WHERE d.id = ?`
+            LEFT JOIN employee m ON e.manager_id = m.id
+            INNER JOIN role ON e.role_id = role.id
+            INNER JOIN department ON role.department_id = department.id
+            WHERE role.department_id = ?
+            
+            ORDER BY e.id;`, departmentOptions.id, (error, results) => {
+            if (error) throw error;
 
-            connection.query(query, answer.departmentId, function (err, res) {
-                if (err) throw err;
+            console.table(results);
+            beginPrompt();
+        })
+        })
+    })
+};
 
-                console.table("response ", res);
-                console.log(res.affectedRows + "Employees listed by department\n");
+const listRoles = () => {
+    connection.query(`SELECT
+    role.id AS ID,
+    role.title AS Title,
+    department.name AS Department,
+    CONCAT("$",role.salary) AS Salary
+    FROM role
+    INNER JOIN department ON role.department_id = department.id
+    ORDER BY department.id, ID;`, (err, results) => {
+        if (err) throw err;
+        console.table(results);
+        beginPrompt();
+    });
+};
 
-                beginPrompt();
-            });
-        });
+
+const listDept = () => {
+    connection.query(`SELECT
+    department.id AS ID,
+    department.name AS Department,
+    SUM(role.salary) AS Utilized_Budget
+    FROM department
+    LEFT JOIN role ON role.department_id = department.id
+    GROUP BY department.id;`, (err, results) => {
+        if (err) throw err;
+        console.table(results);
+        beginPrompt();
+    });
+};
+
+function addEmployee () {
+    
 }
 
-function addEmployee() {
-
-};
-
-function removeEmployee() {
-
-};
-  
-function updateEmployeeRole() {
-
-};
-
-function addRole() {
-
-};
