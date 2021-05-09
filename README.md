@@ -2,7 +2,7 @@
 ## Description
 This project uses npm packages console.table, inquirer, and mysql to initiate a MySQL database that tracks employees, their roles and which department they work in.  By using/running node index.js in the root file
 
-[Link to Recording](https://drive.google.com)
+[Link to Recording](https://drive.google.com/file/d/1YJUEMlLpY9OvL_WN2zSArtfZ_NkSuxoU/view)
 
 ## Installation
 install npm packages inquirer, console.table, and mysql as dependencies (npm i inquirer console.table mysql)
